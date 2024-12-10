@@ -1,0 +1,73 @@
+substitutions:
+  name: esp-cam-logger
+
+esphome:
+  name: ${name}
+  friendly_name: "ESP-CAM logger module"
+  build_path: "../config/esphome/builds/${name}"
+  libraries:
+    - FS
+    - SPI
+    - SD
+  includes:
+    - esp-cam-logger.h
+
+#esp-cam:
+#SS/CS/D3  13
+#SCK       14
+#MOSI/CMD  15
+#MISO/D0    2
+#D1        4
+#D2        12
+
+esp32:
+  board: esp32cam
+  framework:
+    type: arduino
+    version: latest
+
+web_server:
+  port: 80
+  version: 3
+  local: True
+  include_internal: True
+
+# Enable logging
+logger:
+  id: component_logger
+  level: DEBUG
+  logs:
+    component: NONE
+    xpt2046: INFO
+    canbus: INFO
+    sensor: INFO
+    spi: DEBUG
+  baud_rate: 0 #disable logging over uart
+
+
+button:
+  - platform: template
+    id: bt_chk
+    name: "Check SD"
+    on_press: 
+      then:
+        - lambda: |-
+            chksd();
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+  
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.1.239
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+  reboot_timeout: 30min
